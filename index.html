@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Ink and Mind</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      text-align: center;
+      margin-top: 50px;
+      background: linear-gradient(to right, #f7f7f7, #eaeaea);
+    }
+    .word {
+      font-size: 48px;
+      margin-bottom: 20px;
+      animation: pulse 0.8s infinite alternate;
+    }
+    @keyframes pulse {
+      from { transform: scale(1); }
+      to { transform: scale(1.1); }
+    }
+    .options button {
+      margin: 10px;
+      padding: 10px 20px;
+      font-size: 20px;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+    .options button:hover {
+      transform: scale(1.1);
+    }
+    #timer {
+      font-size: 24px;
+      margin-bottom: 10px;
+    }
+    #instructions, #start-section {
+      max-width: 600px;
+      margin: auto;
+    }
+    #game-section {
+      display: none;
+    }
+    #leaderboard {
+      display: none;
+      margin-top: 20px;
+    }
+    #leaderboard ul {
+      list-style: none;
+      padding: 0;
+    }
+    #leaderboard li {
+      margin: 5px 0;
+    }
+    #music-toggle {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      padding: 6px 12px;
+      font-size: 14px;
+      background: white;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <h1>🖋️ Ink and Mind</h1>
+
+  <audio id="bg-music" loop>
+    <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mpeg">
+  </audio>
+  <button id="music-toggle" onclick="toggleMusic()">🔇 Toggle Music</button>
+
+  <div id="start-section">
+    <div id="instructions">
+      <h2>Game Instructions</h2>
+      <ul style="text-align: left; display: inline-block;">
+        <li>You will see a color word (like "Red") displayed in a different font color (like blue).</li>
+        <li>Your task is to select the <strong>color of the text</strong>, not the word itself.</li>
+        <li>You have 30 seconds to score as many points as you can.</li>
+        <li>The game will begin after you enter your name and click start.</li>
+      </ul>
+    </div>
+    <div style="margin-top: 20px;">
+      <input type="text" id="username" placeholder="Enter your name" style="padding: 10px; font-size: 16px;">
+      <button onclick="startGame()" style="padding: 10px 20px; font-size: 16px;">Start Game</button>
+    </div>
+  </div>
+
+  <div id="game-section">
+    <div id="timer">Time Left: 30s</div>
+    <div id="score">Score: 0</div>
+    <div class="word" id="word">Loading...</div>
+    <div class="options" id="options"></div>
+  </div>
+
+  <div id="leaderboard">
+    <h3>🏆 Leaderboard</h3>
+    <ul id="leaderboard-list"></ul>
+  </div>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js"></script>
+
+  <script>
+    // Replace with your actual Firebase config
+    const firebaseConfig = {
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+      databaseURL: "https://YOUR_PROJECT_ID.firebaseio.com",
+      projectId: "YOUR_PROJECT_ID",
+      storageBucket: "YOUR_PROJECT_ID.appspot.com",
+      messagingSenderId: "YOUR_SENDER_ID",
+      appId: "YOUR_APP_ID"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    const wordColorPairs = [
+      { word: "Red", color: "blue" }, { word: "Blue", color: "green" },
+      { word: "Yellow", color: "red" }, { word: "Pink", color: "orange" },
+      { word: "Green", color: "purple" }, { word: "Orange", color: "black" },
+      { word: "Cyan", color: "brown" }, { word: "Lime", color: "navy" },
+      { word: "Teal", color: "magenta" }, { word: "Gray", color: "pink" },
+      { word: "Black", color: "yellow" }, { word: "White", color: "gray" }
+    ];
+
+    const options = ["red", "blue", "green", "yellow", "pink", "orange", "purple", "black", "brown", "lime", "cyan", "gray", "magenta", "teal", "navy", "white"];
+    let score = 0;
+    let timeLeft = 30;
+    let timer;
+    let userName = "";
+
+    function toggleMusic() {
+      const music = document.getElementById("bg-music");
+      if (music.paused) {
+        music.play();
+      } else {
+        music.pause();
+      }
+    }
+
+    function startGame() {
+      const input = document.getElementById("username");
+      if (!input.value.trim()) {
+        alert("Please enter your name to start the game.");
+        return;
+      }
+      userName = input.value.trim();
+
+      // Start music on user interaction
+      const music = document.getElementById("bg-music");
+      if (music.paused) music.play();
+
+      score = 0;
+      timeLeft = 30;
+      document.getElementById("score").textContent = "Score: 0";
+      document.getElementById("start-section").style.display = "none";
+      document.getElementById("game-section").style.display = "block";
+      timer = setInterval(updateTimer, 1000);
+      nextRound();
+    }
+
+    function updateTimer() {
+      timeLeft--;
+      document.getElementById("timer").textContent = `Time Left: ${timeLeft}s`;
+      if (timeLeft <= 0) {
+        clearInterval(timer);
+        endGame();
+      }
+    }
+
+    function nextRound() {
+      const pair = wordColorPairs[Math.floor(Math.random() * wordColorPairs.length)];
+      const wordElement = document.getElementById("word");
+      wordElement.textContent = pair.word;
+      wordElement.style.color = pair.color;
+
+      const shuffled = options.sort(() => 0.5 - Math.random()).slice(0, 4);
+      if (!shuffled.includes(pair.color)) {
+        shuffled[0] = pair.color;
+      }
+
+      const buttonsHTML = shuffled.map(opt =>
+        `<button onclick="checkAnswer('${opt}', '${pair.color}')">${opt}</button>`
+      ).join('');
+      document.getElementById("options").innerHTML = buttonsHTML;
+    }
+
+    function checkAnswer(selected, correct) {
+      if (selected === correct) score++;
+      document.getElementById("score").textContent = `Score: ${score}`;
+      nextRound();
+    }
+
+    function endGame() {
+      alert(`Game Over! ${userName}, your score is ${score}`);
+      db.ref("leaderboard").push({ name: userName, score });
+      showLeaderboard();
+    }
+
+    function showLeaderboard() {
+      const list = document.getElementById("leaderboard-list");
+      list.innerHTML = "";
+      db.ref("leaderboard").orderByChild("score").limitToLast(10).once("value", snapshot => {
+        const entries = [];
+        snapshot.forEach(child => entries.push(child.val()));
+        entries.reverse().forEach(entry => {
+          const li = document.createElement("li");
+          li.textContent = `${entry.name}: ${entry.score}`;
+          list.appendChild(li);
+        });
+        document.getElementById("leaderboard").style.display = "block";
+      });
+    }
+  </script>
+</body>
+</html>
