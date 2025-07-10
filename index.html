@@ -99,24 +99,27 @@
     <ul id="leaderboard-list"></ul>
   </div>
 
-  <!-- Firebase SDK -->
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js"></script>
+  <!-- ✅ Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/11.10.0/firebase-database.js"></script>
 
   <script>
-    // Replace with your actual Firebase config
     const firebaseConfig = {
-      apiKey: "YOUR_API_KEY",
-      authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-      databaseURL: "https://YOUR_PROJECT_ID.firebaseio.com",
-      projectId: "YOUR_PROJECT_ID",
-      storageBucket: "YOUR_PROJECT_ID.appspot.com",
-      messagingSenderId: "YOUR_SENDER_ID",
-      appId: "YOUR_APP_ID"
+      apiKey: "AIzaSyDUZIgRar16iXSCi6eCyiU_zZC0_htVw0g",
+      authDomain: "inkandmind-70ce9.firebaseapp.com",
+      projectId: "inkandmind-70ce9",
+      storageBucket: "inkandmind-70ce9.firebasestorage.app",
+      messagingSenderId: "447794454215",
+      appId: "1:447794454215:web:a1d12bfd6140fe15b968e2",
+      measurementId: "G-CESWDE9ECQ",
+      databaseURL: "https://inkandmind-70ce9-default-rtdb.firebaseio.com"
     };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
+  </script>
 
+  <!-- ✅ Game Logic -->
+  <script>
     const wordColorPairs = [
       { word: "Red", color: "blue" }, { word: "Blue", color: "green" },
       { word: "Yellow", color: "red" }, { word: "Pink", color: "orange" },
@@ -149,7 +152,7 @@
       }
       userName = input.value.trim();
 
-      // Start music on user interaction
+      // 🎵 Start music on interaction
       const music = document.getElementById("bg-music");
       if (music.paused) music.play();
 
